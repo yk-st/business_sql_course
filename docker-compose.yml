@@ -1,0 +1,21 @@
+version: "2"
+services:
+  metabase:
+    platform: linux/x86_64
+    image: metabase/metabase:v0.41.1
+    env_file: ./env
+    volumes:
+      - ./metabase-data:/metabase-data
+    ports:
+      - 3000:3000
+    depends_on:
+      - postgres-mb
+
+  postgres-mb:
+    platform: linux/x86_64
+    image: postgres:10.20-alpine
+    env_file: ./env
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
