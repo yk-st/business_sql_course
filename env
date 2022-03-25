@@ -1,5 +1,5 @@
 # for metabase
-MB_DB_FILE=/metabase-data/metabase.db/metabase.db
+MB_DB_FILE=/metabase-data/metabase.db
 MB_DB_TYPE=postgres
 MB_DB_DBNAME=metabase
 MB_DB_PORT=5432
