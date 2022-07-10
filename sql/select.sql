@@ -74,6 +74,13 @@ product_idが100以上だったら、Product_id、quantitiy、taxを利用して
 
 # 複数テーブルを操作する join
 # inner joinとleft join
+# product_idはproduct テーブルのidと紐ついています。そのためproduct_idとidを結合してみます。
+# product_idだけではわからなかった、productの名前がわかるようになります。
+
+select distinct od.PRODUCT_ID,pd.TITLE
+from 
+ORDERS as od
+inner join PRODUCTS as pd on od.PRODUCT_ID = pd.id 
 
 # 集計関数(Group By)
 # Excelでいう小計であったり合計を出したりすることに使う
@@ -147,7 +154,6 @@ order by product_sum asc
 
 
 # 重複削除
-
 select distinct(orders.peken) from (
 select 
     CASE id
