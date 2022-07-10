@@ -82,6 +82,18 @@ from
 ORDERS as od
 inner join PRODUCTS as pd on od.PRODUCT_ID = pd.id 
 
+## 演習
+PEOPLEテーブルがあります。ordersテーブルのuser_idとpeopleテーブルのidを結合して
+誰がどのような商品を購入したのか確認してみましょう。
+さらに、productsテーブルとも紐つけて商品名もわかるようにしてみましょう。
+
+select distinct od.PRODUCT_ID,pd.TITLE,p.name
+from 
+ORDERS as od
+inner join PRODUCTS as pd on od.PRODUCT_ID = pd.id 
+inner join PEOPLE as p on p.id = od.USER_ID
+order by p.name
+
 # 集計関数(Group By)
 # Excelでいう小計であったり合計を出したりすることに使う
 # order byは並び替えの方法ascは昇順(小 -> 大)、descは逆
