@@ -120,7 +120,13 @@ order by product_sum asc
 # 欠損処理
 # null 除外
 # null を別の値で置き換える
+# lpad
 # 先ほどのleft joinとくっつけると強力
+
+# sign
+# 0超過なら1
+# 0なら0
+# 0未満なら0
 
 # 擬似的に欠損データを作ります
 # こちらが新たなorders テーブルだと一時的に思ってください
@@ -163,7 +169,6 @@ group by PRODUCT_ID
 order by product_sum asc
 # 他にも「1」「男」みたいな状況であれば、Case文を使って揺れを統一させていきます
 # 非常に骨の折れる作業ですが使いやすさのため、欠損処理も含めとっても大切な作業です
-
 
 # 重複削除
 select distinct(orders.peken) from (
