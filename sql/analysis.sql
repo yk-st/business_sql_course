@@ -100,14 +100,6 @@ select
     ) as last_month_ratio
 from hoge ;
 
-
-# 擬似テーブル
-with hoge as (
-    select 1 as seq
-    union all select 2 as seq
-)
-select * from hoge
-
 # ヒストグラム
 SELECT wb * 100 as range, count(wb) FROM 
   (SELECT width_bucket(reviews, 1, 4000, 40) as wb FROM users WHERE reviews > 0) as t 

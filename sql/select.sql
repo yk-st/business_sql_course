@@ -27,9 +27,6 @@ select * from orders where id > 70 or tax < 4
 # %はなんでもありという意味
 select Product_id from orders where Product_id like '%36%'
 
-# 演習
-Product_id、quantitiy、taxを使ってtotalカラムと数値が一致したらTrueを別名カラムで出力してみよう
-
 # with
 # 繰り返し行うような処理におすすめです
 
@@ -40,10 +37,12 @@ WITH orders_with AS (
   WHERE
     od.tax > 4
 )
-
 select *
 from 
 orders_with
+union all 
+select *
+from orders_with
 
 # 副問い合わせ
 # テーブルの検索結果を条件にして検索をする事ができる
@@ -165,6 +164,7 @@ from
 where
  id in(1,2,3)
  ) as orders
+
 # COALESCEを使って穴埋めしてきます
 select COALESCE(orders.peken, cast(orders.product_id as character)), orders.product_id from (
 select 
@@ -205,3 +205,12 @@ from
 where
  id in(1,2,3)
  ) as orders
+
+ # 擬似テーブル
+with hoge as (
+    select 1 as seq
+    union all select 2 as seq
+)
+select * from hoge
+
+# 演習：２つのカラムを持つ擬似テーブルを作成してみよう
