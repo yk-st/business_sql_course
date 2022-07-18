@@ -14,13 +14,26 @@ order by p.name
 # max(col)
 # 最頻値
 
-SELECT mode() WIHTHIN GROUP (ORDER BY カラム名) AS お好きな名前 FROM テーブル名
+# あとは変更するだけ
+select sum(total) from ORDERS
 
-SELECT PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY col)
-FROM tbl
+# 中央値
+# 平均値
+# ばらつきが多い場合は平均値の方が良かったりする
+SELECT mode() WIHTHIN GROUP (ORDER BY product_id) AS hoge FROM orders
+
+# 最頻値
+SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY tax)
+FROM ORDERS
 
 # window関数
-
+select 
+user_id,product_id,
+avg(total) over(
+    partition by user,product_id
+)
+from 
+orders
 
 # 移動平均
 # 先ほど学んだwindow関数を使うとこのようなこともできます。
@@ -36,6 +49,25 @@ SELECT
 FROM
     monthly_sales
 ;
+
+with hoge as (
+
+select * from (
+    SELECT product_id,total,to_char(created_at, 'YYYY-MM') AS sa_month
+    FROM orders
+)  peke
+
+)
+
+select 
+    product_id
+    , sa_month
+    , AVG(total) OVER (
+        partition by product_id
+        order by sa_month
+        rows between 5 preceding and current row
+    ) moving_avg
+from hoge ;
 
 # 擬似テーブル
 with hoge as (

@@ -15,5 +15,7 @@ services:
     env_file: ./env
     volumes:
       - ./postgres-data:/var/lib/postgresql/data
+      - ./posgreinit:/docker-entrypoint-initdb.d
     ports:
       - 5432:5432
+    container_name: "db"
