@@ -113,26 +113,32 @@ SELECT wb * 100 as range, count(wb) FROM
   (SELECT width_bucket(reviews, 1, 4000, 40) as wb FROM users WHERE reviews > 0) as t 
   GROUP BY wb;
 
+# 単純にグラフを書いてみる
 with hoge as (
-
-select * from (
-    SELECT product_id,total,to_char(created_at, 'YYYY-MM') AS sa_month
-    FROM orders
-)  peke
-
+    select * from (
+        SELECT product_id,total,to_char(created_at, 'YYYY-MM') AS sa_month
+        FROM orders
+    )  peke
 )
-
 select 
     sa_month,count(product_id)
 from hoge 
 group by sa_month,product_id
 ;
 
-# roll up/cube/(group select)
-# 小計を出したい時に使う
-https://qiita.com/tlokweng/items/a15b67f3475e38282dca
+# roll up/cube/
 
-
+with hoge as (
+    select * from (
+        SELECT product_id,total,to_char(created_at, 'YYYY-MM') AS sa_month
+        FROM orders
+    )  peke
+)
+select 
+    sa_month,product_id,sum(total),count(*)
+from hoge 
+group by rollup(sa_month,product_id)
+;
 
 # 縦持ち/横持ち
 # 昔ながらの運用などで分析に向かないデータの持ち方をしている場合もある
