@@ -28,28 +28,16 @@ FROM ORDERS
 
 # window関数
 select 
-user_id,product_id,
-avg(total) over(
-    partition by user,product_id
+product_id,total,
+row_number() over(
+    partition by product_id
+    order by total
 )
 from 
 orders
 
 # 移動平均
 # 先ほど学んだwindow関数を使うとこのようなこともできます。
-SELECT
-    sales_month
-    , shop_id
-    , sales_amount
-    , AVG(sales_amount) OVER (
-        partition by shop_id
-        order by sales_month
-        rows between 5 preceding and current row
-    ) moving_avg
-FROM
-    monthly_sales
-;
-
 with hoge as (
 
 select * from (
@@ -69,6 +57,50 @@ select
     ) moving_avg
 from hoge ;
 
+# lag関数/lead関数
+with hoge as (
+
+select * from (
+    SELECT product_id,total,to_char(created_at, 'YYYY-MM') AS sa_month
+    FROM orders
+)  peke
+
+)
+select 
+    product_id
+    , sa_month
+    , total
+    , lag(total) OVER (
+        partition by product_id
+        order by sa_month
+    ) as lagss
+from hoge ;
+
+
+#＃ 演習：lag関数を使って売上の先回比を出してみましょう
+with hoge as (
+
+select * from (
+    SELECT product_id,total,to_char(created_at, 'YYYY-MM') AS sa_month
+    FROM orders
+)  peke
+
+)
+
+select 
+    product_id
+    , sa_month
+    , total
+    , sum(total) OVER(
+        partition by product_id, sa_month
+    ) 
+    / lag(total) OVER (
+        partition by product_id
+        order by sa_month
+    ) as last_month_ratio
+from hoge ;
+
+
 # 擬似テーブル
 with hoge as (
     select 1 as seq
@@ -76,19 +108,31 @@ with hoge as (
 )
 select * from hoge
 
-# lag関数
-
-
-#＃ 演習：lag関数を使って売上の先月比を出してみましょう
-
 # ヒストグラム
 SELECT wb * 100 as range, count(wb) FROM 
   (SELECT width_bucket(reviews, 1, 4000, 40) as wb FROM users WHERE reviews > 0) as t 
   GROUP BY wb;
 
+with hoge as (
+
+select * from (
+    SELECT product_id,total,to_char(created_at, 'YYYY-MM') AS sa_month
+    FROM orders
+)  peke
+
+)
+
+select 
+    sa_month,count(product_id)
+from hoge 
+group by sa_month,product_id
+;
+
 # roll up/cube/(group select)
 # 小計を出したい時に使う
 https://qiita.com/tlokweng/items/a15b67f3475e38282dca
+
+
 
 # 縦持ち/横持ち
 # 昔ながらの運用などで分析に向かないデータの持ち方をしている場合もある
@@ -137,14 +181,9 @@ group by
     tmp.employee_id
 ;
 
-# データの妥当性にも気を付けてみよう
-# データエンジニアとも協力を考えてみよう。いわゆる「データ品質」
-# まずは、自身が考えるデータのあるべき姿をチェックする
-# AVG(CASE)
-
 # 集合演算とベン図
 
-# さ集合
+# 差集合
 SELECT
 -- 0,2,4,6,8,10
 generate_series( 0, 10, 2 )
@@ -157,8 +196,14 @@ generate_series( 0, 10, 3 )
 
 # 和集合
 UNION
-
 # 積集合
 INTERSECT
 
+
+
 # ユークリッド距離と類似度
+
+# データの妥当性にも気を付けてみよう
+# データエンジニアとも協力を考えてみよう。いわゆる「データ品質」
+# まずは、自身が考えるデータのあるべき姿をチェックする
+# AVG(CASE)

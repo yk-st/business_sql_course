@@ -119,14 +119,36 @@ order by product_sum asc
 
 # 欠損処理
 # null 除外
+# where is not null で除外する
+
 # null を別の値で置き換える
+# 平均値などで埋め合わせることもある
+with hoge as (
+    select 1 as seq
+    union all select 2 as seq
+    union all select null as seq
+)
+SELECT COALESCE(seq, 99) FROM hoge;
+
 # lpad
 # 先ほどのleft joinとくっつけると強力
+
+# rpadという右から詰める方法もある
+select distinct lpad( cast(USER_ID as varchar) , 8 , '0') from orders
 
 # sign
 # 0超過なら1
 # 0なら0
-# 0未満なら0
+# 0未満なら-1
+with hoge as (
+    select 1 as seq
+    union all select 2 as seq
+    union all select null as seq
+)
+,(
+SELECT SIGN(COALESCE(seq, -1)) as signs FROM hoge
+) peke
+select count(signs),signs from peke group by signs
 
 # 擬似的に欠損データを作ります
 # こちらが新たなorders テーブルだと一時的に思ってください
