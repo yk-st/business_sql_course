@@ -100,10 +100,21 @@ select
     ) as last_month_ratio
 from hoge ;
 
-# ヒストグラム
-SELECT wb * 100 as range, count(wb) FROM 
-  (SELECT width_bucket(reviews, 1, 4000, 40) as wb FROM users WHERE reviews > 0) as t 
-  GROUP BY wb;
+# roll up/cube/
+
+with hoge as (
+    select * from (
+        SELECT product_id,total,to_char(created_at, 'YYYY-MM') AS sa_month
+        FROM orders
+    )  peke
+)
+select 
+    sa_month,product_id,sum(total),count(*)
+from hoge 
+group by rollup(sa_month,product_id)
+;
+
+# ヒストグラムを書いてみよう
 
 # 単純にグラフを書いてみる
 with hoge as (
@@ -118,19 +129,24 @@ from hoge
 group by sa_month,product_id
 ;
 
-# roll up/cube/
-
+# ヒストグラム
 with hoge as (
     select * from (
         SELECT product_id,total,to_char(created_at, 'YYYY-MM') AS sa_month
         FROM orders
     )  peke
 )
+, peke as (
 select 
-    sa_month,product_id,sum(total),count(*)
+    sa_month,product_id,sum(total) as total_month,count(*)
 from hoge 
 group by rollup(sa_month,product_id)
-;
+)
+
+SELECT total_months * 100 as range, count(total_months) FROM 
+  (SELECT width_bucket(total_month, 1, 4000, 5) as total_months FROM peke) as t 
+  GROUP BY total_months
+order by range desc;
 
 # 縦持ち/横持ち
 # 昔ながらの運用などで分析に向かないデータの持ち方をしている場合もある
