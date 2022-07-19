@@ -243,14 +243,34 @@ UNION
 # 積集合
 INTERSECT
 
-# ユークリッド距離とコサイン類似度
-select
- sqrt(power(x1-x2,2) + power(y1-y2,2)) as dist
-from
- location
-
-
 # データの妥当性にも気を付けてみよう
 # データエンジニアとも協力を考えてみよう。いわゆる「データ品質」
 # まずは、自身が考えるデータのあるべき姿をチェックする
 # AVG(CASE)
+
+select 
+AVG(CASE WHEN id is NOT NULL THEN 1.0 ELSE 0.0 END) AS id
+from 
+orders
+
+# ユーニークかどうか
+# mysqlなどキー制約としてPKになっている時もあるがそうなっていない時もあるので
+select not exists (
+    select id, count(*)
+    from orders
+    group by id
+    having count(*) > 1
+);
+
+# total はプラス
+select 
+AVG(CASE WHEN total < 0 THEN 1.0 ELSE 0.0 END) AS total
+from 
+orders
+
+
+select 
+AVG(CASE WHEN id is NOT NULL THEN 1.0 ELSE 0.0 END) AS id,
+AVG(CASE WHEN total < 0 THEN 1.0 ELSE 0.0 END) AS total
+from 
+orders
