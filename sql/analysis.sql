@@ -151,48 +151,78 @@ order by range desc;
 # 縦持ち/横持ち
 # 昔ながらの運用などで分析に向かないデータの持ち方をしている場合もある
 # その場合は、既出の擬似テーブルを利用して縦持ち/横持ちを変換していきます
+
+#　横持ちデータを調べてみる
+with henkan as (
+    select 1 as seq
+    union all select 2 as seq
+    union all select 3 as seq
+)
+,yokomoti as (
+    select 'hoge' as id, 1 as qualification_id_1, 2 as qualification_id_2, 3 as qualification_id_3
+    union all select 'hoge2' as id, 4 as qualification_id_1, 5 as qualification_id_2, 6 as qualification_id_3
+    union all select 'hoge3' as id, 19 as qualification_id_1, 12 as qualification_id_2, 11 as qualification_id_3
+)
+
+select * from yokomoti;
+
+# 変換
+with henkan as (
+    select 1 as seq
+    union all select 2 as seq
+    union all select 3 as seq
+)
+,yokomoti as (
+    select 'hoge' as id, 1 as qualification_id_1, 2 as qualification_id_2, 3 as qualification_id_3
+    union all select 'hoge2' as id, 4 as qualification_id_1, 5 as qualification_id_2, 6 as qualification_id_3
+    union all select 'hoge3' as id, 19 as qualification_id_1, 12 as qualification_id_2, 11 as qualification_id_3
+)
+
 select
     sub.*
 from
 (
     select
-         q.employee_id
+         q.id
         ,case p.seq
             when 1 then q.qualification_id_1
             when 2 then q.qualification_id_2
             when 3 then q.qualification_id_3
-            when 4 then q.qualification_id_4
         end as qualification_id
     from
-        qualifications_horizontal as q
+        yokomoti as q
     cross join
-        pivot as p
+        henkan as p
 ) sub
-where
-    sub.qualification_id is not null
 order by
-     sub.employee_id
-    ,sub.qualification_id
+    sub.qualification_id
 ;
 
+# どういう仕組み？
+with henkan as (
+    select 1 as seq
+    union all select 2 as seq
+    union all select 3 as seq
+)
+,yokomoti as (
+    select 'hoge' as id, 1 as qualification_id_1, 2 as qualification_id_2, 3 as qualification_id_3
+    union all select 'hoge2' as id, 4 as qualification_id_1, 5 as qualification_id_2, 6 as qualification_id_3
+    union all select 'hoge3' as id, 19 as qualification_id_1, 12 as qualification_id_2, 11 as qualification_id_3
+)
 
 select
-     tmp.employee_id
-    ,max(case tmp.seq when 1 then tmp.qualification_id else null end) as qualification_id1
-    ,max(case tmp.seq when 2 then tmp.qualification_id else null end) as qualification_id2
-    ,max(case tmp.seq when 3 then tmp.qualification_id else null end) as qualification_id3
-    ,max(case tmp.seq when 4 then tmp.qualification_id else null end) as qualification_id4
+    sub.*
 from
 (
     select
-         employee_id
-        ,qualification_id
-        ,row_number() over (partition by employee_id) as seq
+         q.id,
+         p.seq
+         qualification_id_1, qualification_id_2, qualification_id_3
     from
-        qualifications_vertical
-) tmp
-group by
-    tmp.employee_id
+        yokomoti as q
+    cross join
+        henkan as p
+) sub
 ;
 
 # 集合演算とベン図
@@ -213,9 +243,12 @@ UNION
 # 積集合
 INTERSECT
 
+# ユークリッド距離とコサイン類似度
+select
+ sqrt(power(x1-x2,2) + power(y1-y2,2)) as dist
+from
+ location
 
-
-# ユークリッド距離と類似度
 
 # データの妥当性にも気を付けてみよう
 # データエンジニアとも協力を考えてみよう。いわゆる「データ品質」
