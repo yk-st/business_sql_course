@@ -1,11 +1,74 @@
-# 相関度
-# 
+月ごとの分析
+with hoge as (
+    select * from (
+        SELECT product_id,total,to_char(created_at, 'YYYY-MM') AS sa_month
+        FROM orders
+    )  peke
+)
+select 
+    sa_month,sum(total),product_id
+from hoge 
+group by sa_month,product_id
+order by product_id,sa_month
+;
+
 
 # デシル分析
-# ユーザの購入ランクにてランク分けして、5グループに分けてみましょう
-# 各グループごとの合計を出して
-# 全体の売上量と比率計算を行います。
+# ユーザの購入ランクにてランク分けして、10グループに分けてみましょう
 # 均等に１０分割できるようにntileを利用して分割します
+
+# 各グループごとの合計を出して
+# 全体の売上量と構成比率計算を行います。
+
+with base_data as (
+    select * from (
+        SELECT user_id,name,product_id,total,to_char(o.created_at, 'YYYY-MM') AS sa_month
+        FROM orders as o
+        inner join people as p on user_id = p.id
+    )  peke
+)
+,
+user_amount_data as (
+select 
+
+user_id,name,sum(total) as user_amount
+from base_data 
+group by user_id,name
+order by user_id
+)
+,
+decile_base as (
+SELECT
+user_id,name,user_amount,
+ntile(10) over(order by user_amount desc) as decile
+from user_amount_data
+)
+
+,
+math_base as (
+select 
+decile,
+
+sum(user_amount) as group_amount,
+avg(user_amount) as avg_amount,
+sum(sum(user_amount)) over() as total_amount,
+sum(sum(user_amount)) over(order by decile) as cumilative_amount
+
+from 
+decile_base
+group by decile 
+)
+
+select 
+  decile,
+  group_amount,
+  avg_amount,
+  100.0 * group_amount / total_amount as total_ratio,
+  100.0 * cumilative_amount/ total_amount as cumilative_ratio
+from 
+math_base
+
+ 
 
 # ABC分析
 # Aランク 0~70
@@ -19,6 +82,35 @@
 # ファンチャート
 # とある時点を100として
 # 今回は各プロダクトごとの２０１８年1月のデータを100%基準としてファンチャートを作成してみます。
+
+with hoge as (
+    select * from (
+        SELECT product_id,total,to_char(created_at, 'YYYY-MM') AS sa_month
+        FROM orders
+    )  peke
+)
+,
+base_data as (
+select 
+    sa_month,sum(total) as amount,product_id, prod.title
+from hoge 
+inner join products as prod
+on product_id = prod.id
+where 
+ product_id in(3,4)
+group by sa_month,product_id,title
+order by product_id,sa_month
+)
+
+select 
+  sa_month,
+  product_id,
+  title,
+  first_value(amount)
+  over(partition by product_id  order by sa_month, product_id rows unbounded preceding) as base_data,
+  100.0 * amount / first_value(amount)
+  over(partition by product_id  order by sa_month, product_id rows unbounded preceding) as rate
+ from base_data
 
 # Zチャート
 # 月次売上/売上累計/移動年計
