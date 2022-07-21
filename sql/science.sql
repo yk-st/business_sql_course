@@ -117,7 +117,60 @@ SELECT
 # RFM分析
 # デシル分析のさらに細かいバージョン
 
+with base_data as (
+    select * from (
+        SELECT user_id,name,product_id,total,cast(to_char(o.created_at, 'YYYY-MM-DD') as date) AS sa_month
+        FROM orders as o
+        inner join people as p on user_id = p.id
+    )  peke
+)
+,
 
+rfm as (
+SELECT
+ user_id,
+ Max(sa_month) as recent_date,
+ -- 本当はcurrent_dateだが、データ自体が古いのでcurrent_dateを2020-05-10日とする
+ --current_date - MAX(sa_month) as recency
+ cast('2020-05-20' as date) - MAX(sa_month) as recency,
+ -- 購入回数
+ count(sa_month) as frequency,
+ -- 購入金額
+ sum(total) as monetary
+from 
+ base_data
+group by user_id
+order by recency,frequency,monetary
+)
+
+-- ランク分けをしていきます
+SELECT
+ user_id,
+ recent_date,
+ recency,
+ frequency,
+ monetary,
+ case
+  when recency < 14 then 5
+  when recency < 14 then 5
+  when recency < 14 then 5
+  when recency < 14 then 5
+ END as r
+ ,
+ case
+  when frequency < 14 then 5
+  when frequency < 14 then 5
+  when frequency < 14 then 5
+  when frequency < 14 then 5
+ END as f,
+ case
+  when monetary < 14 then 5
+  when monetary < 14 then 5
+  when monetary < 14 then 5
+  when monetary < 14 then 5
+ END as m
+from 
+ rfm
 
 # ファンチャート
 # とある時点を100として
