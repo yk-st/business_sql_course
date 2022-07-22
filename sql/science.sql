@@ -1,3 +1,89 @@
+# ファンチャート
+# 今回は各プロダクトごとの最古のデータを100%基準としてファンチャートを作成してみます。
+
+with hoge as (
+    select * from (
+        SELECT product_id,total,to_char(created_at, 'YYYY-MM') AS sa_month
+        FROM orders
+    )  peke
+)
+,
+base_data as (
+select 
+    sa_month,sum(total) as amount,product_id, prod.title
+from hoge 
+    inner join products as prod
+    on product_id = prod.id
+where 
+ product_id in(3,4)
+group by sa_month,product_id,title
+order by product_id,sa_month
+)
+
+select 
+  sa_month,
+  product_id,
+  title,
+  first_value(amount)
+  over(partition by product_id  order by sa_month, product_id rows unbounded preceding) as base_data,
+  100.0 * amount / first_value(amount)
+  over(partition by product_id  order by sa_month, product_id rows unbounded preceding) as rate
+ from base_data
+
+# Zチャート
+# 月次売上/売上累計/移動年計
+# 当該月を2017/11月にしましょう
+
+# ステップ１：月毎に集計します
+# ファンチャートのSQLをそのまま使います
+# ステップ２：次ごとの累計を少しづつ足していきます。
+# 各合計をひと月づつずらしていくイメージです。
+# 移動年計は当該月の売上と過去11ヶ月の売上累計を足し合わせます
+with hoge as (
+    select * from (
+        SELECT product_id,total,to_char(created_at, 'YYYY-MM') AS sa_month
+        FROM orders
+    )  peke
+)
+,
+-- 月ごとの集計
+-- 当該月を2018-01として行い、2017年のZチャートを作成したい
+-- 移動年計を出すためには2016-01月からデータが必要
+base_data as (
+select 
+    sa_month,sum(total) as month_amount
+from hoge 
+inner join products as prod
+on product_id = prod.id
+where 
+ sa_month between '2016-01' and '2017-12'
+group by sa_month
+order by sa_month
+)
+
+, nenkei as (
+-- 月累計を行う
+select 
+
+    sa_month,month_amount as "月次",
+    -- 2017のZチャートにしたいので条件をつける
+    sum(case when sa_month like '%2017%' then month_amount end) over( order by sa_month ) as "累計",
+    sum(month_amount) over(order by sa_month , sa_month rows between 11 preceding and CURRENT ROW) as "移動"
+
+from 
+    base_data
+)
+
+select 
+    * 
+from 
+    nenkei
+where
+    sa_month like '%2017%'
+order by sa_month
+
+# プロダクトごとに集計することも可能です
+
 # デシル分析
 # ユーザの購入ランクにてランク分けして、10グループに分けてみましょう
 # 均等に１０分割できるようにntileを利用して分割します
@@ -70,8 +156,8 @@ base_data as (
 select 
     sum(total) as amount,product_id, prod.title
 from hoge 
-inner join products as prod
-on product_id = prod.id
+    inner join products as prod
+    on product_id = prod.id
 group by product_id,title
 order by amount
 )
@@ -79,12 +165,12 @@ order by amount
 -- 売上における構成費を出力する
 ,composition as (
 select
-title,
--- プロダクトごとの売上
-sum(amount) as product_amount,
--- 全体の売上 
-sum(sum(amount)) over() as total_amount,
-100.0 * sum(amount) / sum(sum(amount)) over() as composition_ratio
+    title,
+    -- プロダクトごとの売上
+    sum(amount) as product_amount,
+    -- 全体の売上 
+    sum(sum(amount)) over() as total_amount,
+    100.0 * sum(amount) / sum(sum(amount)) over() as composition_ratio
 from base_data
 group by title
 order by composition_ratio desc
@@ -93,10 +179,10 @@ order by composition_ratio desc
 -- 累計割合を出す
 cumulative as (
 select 
- title,
- product_amount,
- composition_ratio,
- sum(composition_ratio) over(order by composition_ratio desc) as cumulative_ratio
+    title,
+    product_amount,
+    composition_ratio,
+    sum(composition_ratio) over(order by composition_ratio desc) as cumulative_ratio
 from composition
 )
 
@@ -175,7 +261,6 @@ SELECT
  END as m
 from 
  rfm
-
 )
 ,
 rfm_count as(
@@ -196,7 +281,6 @@ union all select 2 as rank
 union all select 3 as rank
 union all select 4 as rank
 union all select 5 as rank
-
 )
 ,
 flag as (
@@ -221,93 +305,6 @@ from flag
 group by 
   rank
  order by rank desc
-    
-# ファンチャート
-# とある時点を100として
-# 今回は各プロダクトごとの２０１８年1月のデータを100%基準としてファンチャートを作成してみます。
-
-with hoge as (
-    select * from (
-        SELECT product_id,total,to_char(created_at, 'YYYY-MM') AS sa_month
-        FROM orders
-    )  peke
-)
-,
-base_data as (
-select 
-    sa_month,sum(total) as amount,product_id, prod.title
-from hoge 
-inner join products as prod
-on product_id = prod.id
-where 
- product_id in(3,4)
-group by sa_month,product_id,title
-order by product_id,sa_month
-)
-
-select 
-  sa_month,
-  product_id,
-  title,
-  first_value(amount)
-  over(partition by product_id  order by sa_month, product_id rows unbounded preceding) as base_data,
-  100.0 * amount / first_value(amount)
-  over(partition by product_id  order by sa_month, product_id rows unbounded preceding) as rate
- from base_data
-
-# Zチャート
-# 月次売上/売上累計/移動年計
-# 当該月を2017/11月にしましょう
-
-# ステップ１：月毎に集計します
-# ファンチャートのSQLをそのまま使います
-# ステップ２：次ごとの累計を少しづつ足していきます。
-# 各合計をひと月づつずらしていくイメージです。
-# 移動年計は当該月の売上と過去11ヶ月の売上累計を足し合わせます
-with hoge as (
-    select * from (
-        SELECT product_id,total,to_char(created_at, 'YYYY-MM') AS sa_month
-        FROM orders
-    )  peke
-)
-,
--- 月ごとの集計
--- 当該月を2018-01として行い、2017年のZチャートを作成したい
--- 移動年計を出すためには2016-01月からデータが必要
-base_data as (
-select 
-    sa_month,sum(total) as month_amount
-from hoge 
-inner join products as prod
-on product_id = prod.id
-where 
- sa_month between '2016-01' and '2017-12'
-group by sa_month
-order by sa_month
-)
-
-, nenkei as (
--- 月累計を行う
-select 
-
-sa_month,month_amount as "月次",
--- 2017のZチャートにしたいので条件をつける
-sum(case when sa_month like '%2017%' then month_amount end) over( order by sa_month ) as "累計",
-sum(month_amount) over(order by sa_month , sa_month rows between 11 preceding and CURRENT ROW) as "移動"
-
-from 
-base_data
-)
-
-select 
-* 
-from 
-nenkeiby
-where
-sa_month like '%2017%'
-order by sa_month
-
-# プロダクトごとに集計することも可能です
 
 # アソシエーション分析
 # 2商品缶の関連について紹介する
@@ -325,7 +322,6 @@ order by sa_month
 # 10件のうちXを購入しているデータが2件、そのうちYも購入しているレコードが1件で、Y飲みを購入しているログが0件の場合は
 # 角度は50,購入確率10%(1/10)となり　50/10 = 5となり、Xを購入した場合Yの購入率は5倍ということになります。
 #　一般にリフトが1以上が良いと言われています
-
 
 with base_data as (
     select * from (
