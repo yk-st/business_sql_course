@@ -1,8 +1,12 @@
 show tables;
 
-#　テーブルの検索
-# limitをつけると取得する件数を制限できる
+# Select文を打ってみよう
+##　テーブルの検索
+## limitをつけると取得する件数を制限できる
 select * from orders limit 10;
+
+## 取得するカラムを設定できる
+select id,tax from orders limit 10;
 
 # 四則演算
 # as で別名を付ける事ができる
@@ -11,9 +15,6 @@ select (tax + tax) as 2tax from orders limit 10;
 
 # 演習
 Product_id、quantitiy、taxを使ってtotalカラムと数値が一致することを確認してみよう
-
-# 取得するカラムを設定できる
-select id,tax from orders limit 10;
 
 # 条件付き
 select * from orders where id = 74
@@ -27,7 +28,20 @@ select * from orders where id > 70 or tax < 4
 # %はなんでもありという意味
 select Product_id from orders where Product_id like '%36%'
 
-# with
+# 副問い合わせ
+# テーブルの検索結果を条件にして検索をする事ができる
+
+select * from orders 
+where id in (
+    select id from orders where id % 2 = 0 and id < 10
+)
+
+select 
+ * 
+from 
+ (select 1 ) hoge
+
+# withによる繰り返しの回避と処理途中結果の中間点作成
 # 繰り返し行うような処理におすすめです
 
 WITH orders_with AS (
@@ -37,20 +51,12 @@ WITH orders_with AS (
   WHERE
     od.tax > 4
 )
-select *
-from 
-orders_with
+    select *
+    from 
+    orders_with
 union all 
-select *
-from orders_with
-
-# 副問い合わせ
-# テーブルの検索結果を条件にして検索をする事ができる
-
-select * from orders 
-where id in (
-    select id from orders where id % 2 = 0 and id < 10
-)
+    select *
+    from orders_with
 
 # Case分
 # もしXXXであったら？というように条件分岐をする事ができる
@@ -117,11 +123,11 @@ group by PRODUCT_ID
 order by product_sum asc
 
 # 欠損処理
-# null 除外
-# where is not null で除外する
+## null 除外
+## where is not null で除外する
 
-# null を別の値で置き換える
-# 平均値などで埋め合わせることもある
+## null を別の値で置き換える
+## 平均値などで埋め合わせることもある
 with hoge as (
     select 1 as seq
     union all select 2 as seq
@@ -129,10 +135,10 @@ with hoge as (
 )
 SELECT COALESCE(seq, 99) FROM hoge;
 
-# lpad
-# 先ほどのleft joinとくっつけると強力
+## lpad
+### 先ほどのleft joinとくっつけると強力
 
-# rpadという右から詰める方法もある
+## rpadという右から詰める方法もある
 select distinct lpad( cast(USER_ID as varchar) , 8 , '0') from orders
 
 # sign
