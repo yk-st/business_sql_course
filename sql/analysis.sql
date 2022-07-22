@@ -1,11 +1,11 @@
 # greatest least関数
-select  greatest(od.PRODUCT_ID,od.USER_ID)
+select 
+    greatest(od.PRODUCT_ID,od.USER_ID)
 from 
 ORDERS as od
-inner join PRODUCTS as pd on od.PRODUCT_ID = pd.id 
-inner join PEOPLE as p on p.id = od.USER_ID
+    inner join PRODUCTS as pd on od.PRODUCT_ID = pd.id 
+    inner join PEOPLE as p on p.id = od.USER_ID
 order by p.name
-
 
 # 要約統計量
 # sum(col)
@@ -39,14 +39,11 @@ orders
 # 移動平均
 # 先ほど学んだwindow関数を使うとこのようなこともできます。
 with hoge as (
-
-select * from (
-    SELECT product_id,total,to_char(created_at, 'YYYY-MM') AS sa_month
-    FROM orders
-)  peke
-
+    select * from (
+        SELECT product_id,total,to_char(created_at, 'YYYY-MM') AS sa_month
+        FROM orders
+    )  peke
 )
-
 select 
     product_id
     , sa_month
@@ -242,6 +239,8 @@ generate_series( 0, 10, 3 )
 UNION
 # 積集合
 INTERSECT
+
+# 演習： peopleテーブルとordersテーブルを使ってsourceがtwitterの人とFacebookの人がどちらも購入している商品のproduct_idを出力しよう
 
 # データの妥当性にも気を付けてみよう
 # データエンジニアとも協力を考えてみよう。いわゆる「データ品質」
