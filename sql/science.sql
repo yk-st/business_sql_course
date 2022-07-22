@@ -222,9 +222,6 @@ group by
   rank
  order by rank desc
     
-
-
-
 # ファンチャート
 # とある時点を100として
 # 今回は各プロダクトごとの２０１８年1月のデータを100%基準としてファンチャートを作成してみます。
@@ -305,7 +302,7 @@ base_data
 select 
 * 
 from 
-nenkei
+nenkeiby
 where
 sa_month like '%2017%'
 order by sa_month
@@ -313,11 +310,13 @@ order by sa_month
 # プロダクトごとに集計することも可能です
 
 # アソシエーション分析
+# 2商品缶の関連について紹介する
 # 最後に紹介するのはデータマイニングの一種、データを探索していくという意味
 # かなりサイエンスぽい。本来はPythonなどのプログラミングを用いて行う事が多いがSQLでもできる
+# 今回は同時というより30日以内に別の商品を購入したら同時に購入したとして扱います。by
 
 # 支持度
-# 10件のうちに商品Xと商品Yをどうにに購入したログが1件でもあれば、支持率は10%です
+# 10件のうちに商品Xと商品Yを同時に購入したログが1件でもあれば、支持率は10%です
 
 # 確度
 # 10件のうちXを購入しているデータが2件、そのうちYも購入しているレコードが1件であれば確度は50パーセントです
@@ -327,9 +326,82 @@ order by sa_month
 # 角度は50,購入確率10%(1/10)となり　50/10 = 5となり、Xを購入した場合Yの購入率は5倍ということになります。
 #　一般にリフトが1以上が良いと言われています
 
-# ユークリッド距離とコサイン類似度
-# 似ている似ていないを判断することに使える
-select
- sqrt(power(x1-x2,2) + power(y1-y2,2)) as dist
+
+with base_data as (
+    select * from (
+        SELECT user_id,product_id,total,cast(to_char(o.created_at, 'YYYY-MM-DD') as date) AS sa_month
+            FROM orders as o
+            inner join people as p on user_id = p.id
+        where 
+         product_id < 50
+    )  peke
+),
+
+base_data2 as (
+    select * from (
+        SELECT user_id,product_id,total,cast(to_char(o.created_at, 'YYYY-MM-DD') as date) AS sa_month
+         FROM orders as o
+            inner join people as p on user_id = p.id
+        where 
+         product_id < 50
+    )  peke
+)
+
+-- 購入ログの総数
+-- 商品Xを購入した数
+-- 商品Yを購入した数
+, data1 as (
+
+SELECT
+    product_id,
+    -- 購入ログ数の総数
+    sum(count(*)) over() as total,
+    -- X,Yそれぞれの購入した数
+    count(*) as product_total
+from 
+ base_data
+group by 
+ product_id
+)
+
+, data2 as (
+-- 商品XとYを同日に購入した数
+select 
+    b1.product_id as b1_product_id,
+    b2.product_id as b2_product_id,
+    count(case when b1.sa_month = b2.sa_month then 1 end ) as same_timing_total
+from base_data as b1
+    cross join base_data2 as b2
+where b1.product_id <> b2.product_id
+    group by 
+    b1.product_id,b2.product_id
+)
+
+-- Xを紐つける
+, add_X as (
+SELECT
+    total as a,
+    product_total as x,
+    b1_product_id,
+    b2_product_id,
+    same_timing_total
 from
- location
+ data1
+inner join data2 on data1.product_id = b1_product_id
+)
+
+-- Yを紐つける
+, add_Y as (
+SELECT
+    a,
+    x,
+    product_total as Y,
+    b1_product_id,
+    b2_product_id,
+    same_timing_total
+from
+ data1
+inner join add_X on data1.product_id = b2_product_id
+)
+
+select * from add_Y 
