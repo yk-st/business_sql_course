@@ -142,7 +142,8 @@ from
 group by user_id
 order by recency,frequency,monetary
 )
-
+,
+user_rfm as (
 -- ランク分けをしていきます
 SELECT
  user_id,
@@ -151,26 +152,78 @@ SELECT
  frequency,
  monetary,
  case
-  when recency < 14 then 5
-  when recency < 14 then 5
-  when recency < 14 then 5
-  when recency < 14 then 5
+  when recency <= 32 then 5
+  when recency between 32 and 60 then 4
+  when recency between 60 and 80  then 3
+  when recency between 80 and 120 then 2
+  ELSE 1
  END as r
  ,
  case
-  when frequency < 14 then 5
-  when frequency < 14 then 5
-  when frequency < 14 then 5
-  when frequency < 14 then 5
+  when frequency >=10  then 5
+  when frequency between 7 and 10 then 4
+  when frequency between 3 and 7  then 3
+  when frequency between 2 and 3 then 2
+  ELSE 1
  END as f,
  case
-  when monetary < 14 then 5
-  when monetary < 14 then 5
-  when monetary < 14 then 5
-  when monetary < 14 then 5
+  when monetary >=50000  then 5
+  when monetary between 40000 and 50000 then 4
+  when monetary between 10000 and 40000  then 3
+  when monetary between 2000 and 10000 then 2
+  ELSE 1
  END as m
 from 
  rfm
+
+)
+,
+rfm_count as(
+select 
+ r + f + m as total,
+ r,f,m,count(user_id)
+from user_rfm
+group by
+ r,f,m
+order by
+ total desc , f desc, m desc, r desc
+)
+,
+master_rfm as (
+
+select 1 as rank
+union all select 2 as rank
+union all select 3 as rank
+union all select 4 as rank
+union all select 5 as rank
+
+)
+,
+flag as (
+SELECT
+    rank,
+    case when rank = r then 1 else 0 end as r_flag,
+    case when rank = f then 1 else 0 end as f_flag,
+    case when rank = m then 1 else 0 end as m_flag
+from 
+ master_rfm
+ cross join
+ rfm_count
+
+)
+
+select 
+    rank,
+    sum(r_flag) as r,
+    sum(f_flag) as f,
+    sum(m_flag) as m
+from flag
+group by 
+  rank
+ order by rank desc
+    
+
+
 
 # ファンチャート
 # とある時点を100として
