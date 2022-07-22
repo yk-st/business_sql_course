@@ -381,7 +381,7 @@ where b1.product_id <> b2.product_id
 , add_X as (
 SELECT
     total as a,
-    product_total as x,
+    product_total as b1_x,
     b1_product_id,
     b2_product_id,
     same_timing_total
@@ -393,15 +393,24 @@ inner join data2 on data1.product_id = b1_product_id
 -- Yを紐つける
 , add_Y as (
 SELECT
-    a,
-    x,
-    product_total as Y,
     b1_product_id,
     b2_product_id,
+    a,
+    b1_x,
+    product_total as b2_y,
     same_timing_total
 from
  data1
 inner join add_X on data1.product_id = b2_product_id
 )
 
-select * from add_Y 
+-- 支持度、確信度、リフトを出して行く
+select 
+    b1_product_id,
+    b2_product_id,
+    100.0 * same_timing_total / a as support,
+    100.0 * same_timing_total / b1_x as confidence,
+    (100.0 * same_timing_total / b1_x) / (100.0 * b2_y / a) as lift
+from add_Y 
+order by
+ b1_product_id,b2_product_id
