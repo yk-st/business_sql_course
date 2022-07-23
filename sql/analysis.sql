@@ -19,8 +19,9 @@ select sum(total) from ORDERS
 
 # 中央値
 # 平均値
-# ばらつきが多い場合は平均値の方が良かったりする
-SELECT mode() WIHTHIN GROUP (ORDER BY product_id) AS hoge FROM orders
+# ばらつきが多い場合は平均値より中央値の方が良かったりする
+SELECT MODE() WITHIN GROUP(ORDER BY user_id) AS MODE FROM orders;
+SELECT product_id,MODE() WITHIN GROUP(ORDER BY user_id) AS MODE FROM orders group by product_id;
 
 # 最頻値
 SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY tax)

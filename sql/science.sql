@@ -435,7 +435,9 @@ with base_data as (
     )  peke
 )
 
--- スコアが一次元ベクトル
+-- ユーザの商品に対する興味度を、購入数に応じてスコアづけを用いて数値化してみる
+-- もちろん別の要素を使ってスコア化する事も可能
+-- スコアそれぞれが一次元ベクトルと見做している
 ,
 score as ( 
 SELECT
@@ -464,15 +466,22 @@ group by user_id,product_id
 -- s1.product_id <> s2.product_id
 -- group by s1.product_id,s2.product_id
 
+
+-- 正規化する
 , normalized_ratings as (
 SELECT
     user_id,
     product_id,
     score,
     sqrt(sum(score * score) over(partition by product_id))  as normalized,
+    -- 
     score / sqrt(sum(score * score) over(partition by product_id)) as normalized_score
 from score
 )
+
+-- プロダクト(r1_product)=aとプロダクト(r2_product)=bのなす角度を出力する
+-- 
+-- Σa*b / √Σa^2 + √Σb^2
 
 SELECT
     r1.product_id as r1_product,
