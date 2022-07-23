@@ -449,7 +449,7 @@ from
 group by user_id,product_id
 )
 
--- ユーザーとプロダクト間の組み合わせを作成
+-- ユーザーとプロダクト間の組み合わせを作成(正規化なし)
 -- SELECT
 -- s1.product_id,
 -- s2.product_id,
@@ -466,31 +466,33 @@ group by user_id,product_id
 -- s1.product_id <> s2.product_id
 -- group by s1.product_id,s2.product_id
 
-
 -- 正規化する
 , normalized_ratings as (
 SELECT
     user_id,
     product_id,
     score,
+    -- |a|を算出している
     sqrt(sum(score * score) over(partition by product_id))  as normalized,
-    -- 
+    -- ベクトルの正規化a/|a|
     score / sqrt(sum(score * score) over(partition by product_id)) as normalized_score
 from score
 )
 
 -- プロダクト(r1_product)=aとプロダクト(r2_product)=bのなす角度を出力する
 -- 
--- Σa*b / √Σa^2 + √Σb^2
-
+-- Σa*b / √Σa^2 + √Σb^2 = a.b / |a|.|b|
+-- 正規化すると長さが1になるので|a|.|b|  = 1となって a.bつまり内積だけをもとればよくなる
 SELECT
     r1.product_id as r1_product,
     r2.product_id as r2_product,
     count(r1.user_id) as users,
-    sum(r1.normalized_score * r1.normalized_score) as score,
+    -- a.bで内積を計算
+    sum(r1.normalized_score * r2.normalized_score) as score,
     row_number() over(partition by r1.product_id order by sum(r1.normalized_score * r2.normalized_score) desc) as rank
 from
     normalized_ratings as r1
 inner join normalized_ratings as r2
     on r1.user_id = r2.user_id
 group by r1.product_id,r2.product_id
+
