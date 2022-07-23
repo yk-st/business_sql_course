@@ -273,10 +273,3 @@ AVG(CASE WHEN id is NOT NULL THEN 1.0 ELSE 0.0 END) AS id,
 AVG(CASE WHEN total < 0 THEN 1.0 ELSE 0.0 END) AS total
 from 
 orders
-
-# ユークリッド距離とコサイン類似度
-# 似ている似ていないを判断することに使える
-select
- sqrt(power(x1-x2,2) + power(y1-y2,2)) as dist
-from
- location

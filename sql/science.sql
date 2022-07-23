@@ -308,7 +308,7 @@ group by
 
 # アソシエーション分析
 # 2商品缶の関連について紹介する
-# 最後に紹介するのはデータマイニングの一種、データを探索していくという意味
+# データマイニングの一種、データを探索していくという意味
 # かなりサイエンスぽい。本来はPythonなどのプログラミングを用いて行う事が多いがSQLでもできる
 # 今回は同時というより30日以内に別の商品を購入したら同時に購入したとして扱います。by
 
@@ -410,3 +410,78 @@ select
 from add_Y 
 order by
  b1_product_id,b2_product_id
+
+# ユークリッド距離とコサイン類似度
+# 似ている似ていないを判断することに使える
+# 協調フィルタリング
+# このアイテムを購入した人は、この商品を購入しています
+
+select
+ sqrt(power(x1-x2,2) + power(y1-y2,2)) as dist
+from
+ (select 1 as x1, 2 as x2, 4 as y1, 7 as y2) loc
+
+# ユーザのプロダクトに対する興味の度合いを数値化してみる
+# ユーザがプロダクトを買っているかどうかと個数で数値化してみる
+# 一次元ベクトル
+
+with base_data as (
+    select * from (
+        SELECT user_id,product_id,total,cast(to_char(o.created_at, 'YYYY-MM-DD') as date) AS sa_month, quantity
+            FROM orders as o
+            inner join people as p on user_id = p.id
+        where 
+         product_id < 50
+    )  peke
+)
+
+-- スコアが一次元ベクトル
+,
+score as ( 
+SELECT
+    user_id,
+    product_id,
+    sum( case when quantity = 1 then 0.5 when quantity between 2 and 4 then 0.7 else 1 end) as score
+from 
+ base_data
+group by user_id,product_id
+)
+
+-- ユーザーとプロダクト間の組み合わせを作成
+-- SELECT
+-- s1.product_id,
+-- s2.product_id,
+-- count(s1.user_id),
+-- -- 一次元ベクトルの内積
+-- -- Aプロダクト、Bプロダクト、、、を購入した時のそれぞれのスコアを合計
+-- sum(s1.score * s2.score) as score,
+-- row_number() over(partition by s1.product_id order by sum(s1.score * s2.score) desc)
+-- from 
+--     score s1
+-- inner join score s2 
+--     on s1.user_id = s2.user_id
+-- where
+-- s1.product_id <> s2.product_id
+-- group by s1.product_id,s2.product_id
+
+, normalized_ratings as (
+SELECT
+    user_id,
+    product_id,
+    score,
+    sqrt(sum(score * score) over(partition by product_id))  as normalized,
+    score / sqrt(sum(score * score) over(partition by product_id)) as normalized_score
+from score
+)
+
+SELECT
+    r1.product_id as r1_product,
+    r2.product_id as r2_product,
+    count(r1.user_id) as users,
+    sum(r1.normalized_score * r1.normalized_score) as score,
+    row_number() over(partition by r1.product_id order by sum(r1.normalized_score * r2.normalized_score) desc) as rank
+from
+    normalized_ratings as r1
+inner join normalized_ratings as r2
+    on r1.user_id = r2.user_id
+group by r1.product_id,r2.product_id
