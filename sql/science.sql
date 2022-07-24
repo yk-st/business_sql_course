@@ -273,6 +273,8 @@ from
  rfm
 )
 ,
+
+-- rfm毎にユーザーがどれだけ属しているか集計する
 rfm_count as(
 select 
  r + f + m as total,
@@ -284,6 +286,8 @@ order by
  total desc , f desc, m desc, r desc
 )
 ,
+
+-- 擬似テーブルを利用して、表形式を見やすくする
 master_rfm as (
 
 select 1 as rank
@@ -320,7 +324,7 @@ group by
 # 2商品缶の関連について紹介する
 # データマイニングの一種、データを探索していくという意味
 # かなりサイエンスぽい。本来はPythonなどのプログラミングを用いて行う事が多いがSQLでもできる
-# 今回は同時というより30日以内に別の商品を購入したら同時に購入したとして扱います。by
+# 今回は同時というより30日以内に別の商品を購入したら同時に購入したとして扱います。
 
 # 支持度
 # 10件のうちに商品Xと商品Yを同時に購入したログが1件でもあれば、支持率は10%です
@@ -414,8 +418,11 @@ inner join add_X on data1.product_id = b2_product_id
 select 
     b1_product_id,
     b2_product_id,
+    -- support
     100.0 * same_timing_total / a as support,
+    -- confidece
     100.0 * same_timing_total / b1_x as confidence,
+    -- lift
     (100.0 * same_timing_total / b1_x) / (100.0 * b2_y / a) as lift
 from add_Y 
 order by
