@@ -8,6 +8,7 @@ with hoge as (
     )  peke
 )
 ,
+-- 月とプロダクトごとに売上金額の合計値を出力する
 base_data as (
 select 
     sa_month,sum(total) as amount,product_id, prod.title
@@ -15,6 +16,7 @@ from hoge
     inner join products as prod
     on product_id = prod.id
 where 
+ -- データが多いとみづらいので3,4だけに絞る
  product_id in(3,4)
 group by sa_month,product_id,title
 order by product_id,sa_month
@@ -24,8 +26,11 @@ select
   sa_month,
   product_id,
   title,
+  -- sa_monthで並び替え最古のデータを取得(first_value)
+  -- このデータを100%のデータとする
   first_value(amount)
   over(partition by product_id  order by sa_month, product_id rows unbounded preceding) as base_data,
+  -- 100%のデータに対しての割合を計算する
   100.0 * amount / first_value(amount)
   over(partition by product_id  order by sa_month, product_id rows unbounded preceding) as rate
  from base_data
@@ -48,7 +53,7 @@ with hoge as (
 ,
 -- 月ごとの集計
 -- 当該月を2018-01として行い、2017年のZチャートを作成したい
--- 移動年計を出すためには2016-01月からデータが必要
+-- 移動年計を出すためには2016-01月からデータが必要(11ヶ月前のデータを足すため)
 base_data as (
 select 
     sa_month,sum(total) as month_amount
@@ -66,8 +71,9 @@ order by sa_month
 select 
 
     sa_month,month_amount as "月次",
-    -- 2017のZチャートにしたいので条件をつける
+    -- 2017のZチャートにしたいので条件をつけて集計する
     sum(case when sa_month like '%2017%' then month_amount end) over( order by sa_month ) as "累計",
+    -- 11ヶ月前のデータを対象とする
     sum(month_amount) over(order by sa_month , sa_month rows between 11 preceding and CURRENT ROW) as "移動"
 
 from 
@@ -101,30 +107,32 @@ with base_data as (
 ,
 user_amount_data as (
 select 
-
-user_id,name,sum(total) as user_amount
+    user_id,name,sum(total) as user_amount
 from base_data 
 group by user_id,name
 order by user_id
 )
 ,
+
+-- ntileを使ってユーザーの購入金額に応じて10個のグループに分割する
 decile_base as (
 SELECT
-user_id,name,user_amount,
-ntile(10) over(order by user_amount desc) as decile
+    user_id,name,user_amount,
+    ntile(10) over(order by user_amount desc) as decile
 from user_amount_data
 )
-
 ,
+
+-- グループごとに集計値を出す
 math_base as (
 select 
-decile,
-
-sum(user_amount) as group_amount,
-avg(user_amount) as avg_amount,
-sum(sum(user_amount)) over() as total_amount,
-sum(sum(user_amount)) over(order by decile) as cumilative_amount
-
+    decile,
+    sum(user_amount) as group_amount,
+    avg(user_amount) as avg_amount,
+    -- 小技。overの条件を無くすことで、全てのユーザごとのデータを足し合わせている(=つまり総計)。
+    sum(sum(user_amount)) over() as total_amount,
+    -- 累計は並び替えながら足すことで計算する事が可能
+    sum(sum(user_amount)) over(order by decile) as cumilative_amount
 from 
 decile_base
 group by decile 
@@ -134,13 +142,14 @@ select
   decile,
   group_amount,
   avg_amount,
+  -- 構成比を出力する
   100.0 * group_amount / total_amount as total_ratio,
   100.0 * cumilative_amount/ total_amount as cumilative_ratio
 from 
 math_base
 
 # ABC分析
-# 売れ筋の商品をA~Cランクに分ける
+## 売れ筋の商品をA~Cランクに分ける
 # Aランク 0~70
 # Bランク 70~90
 # Cランク 90~10
@@ -201,7 +210,7 @@ SELECT
  cumulative
 
 # RFM分析
-# デシル分析のさらに細かいバージョン
+## デシル分析のさらに細かいバージョン
 
 with base_data as (
     select * from (
@@ -237,6 +246,7 @@ SELECT
  recency,
  frequency,
  monetary,
+ -- rfmをそれぞれランク分けする
  case
   when recency <= 32 then 5
   when recency between 32 and 60 then 4
@@ -421,6 +431,7 @@ select
 from
  (select 1 as x1, 2 as x2, 4 as y1, 7 as y2) loc
 
+# 協調フィリタリング
 # ユーザのプロダクトに対する興味の度合いを数値化してみる
 # ユーザがプロダクトを買っているかどうかと個数で数値化してみる
 # 一次元ベクトル
@@ -487,7 +498,7 @@ SELECT
     r1.product_id as r1_product,
     r2.product_id as r2_product,
     count(r1.user_id) as users,
-    -- a.bで内積を計算
+    -- a.bで内積を計算 = cosθを算出
     sum(r1.normalized_score * r2.normalized_score) as score,
     row_number() over(partition by r1.product_id order by sum(r1.normalized_score * r2.normalized_score) desc) as rank
 from
