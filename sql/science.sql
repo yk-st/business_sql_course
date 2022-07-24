@@ -482,7 +482,7 @@ from score
 -- プロダクト(r1_product)=aとプロダクト(r2_product)=bのなす角度を出力する
 -- 
 -- Σa*b / √Σa^2 + √Σb^2 = a.b / |a|.|b|
--- 正規化すると長さが1になるので|a|.|b|  = 1となって a.bつまり内積だけをもとればよくなる
+-- 正規化するとベクトルの長さがそれぞれ1になるので|a|.|b| = 1となって a.bつまり内積だけをもとればよくなる
 SELECT
     r1.product_id as r1_product,
     r2.product_id as r2_product,
