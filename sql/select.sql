@@ -150,10 +150,13 @@ with hoge as (
     union all select 2 as seq
     union all select null as seq
 )
-,(
-SELECT SIGN(COALESCE(seq, -1)) as signs FROM hoge
-) peke
-select count(signs),signs from peke group by signs
+,
+peke as(
+    SELECT SIGN(COALESCE(seq, -1)) as signs FROM hoge
+) 
+select 
+    count(signs),signs 
+from peke group by signs
 
 # 擬似的に欠損データを作ります
 # こちらが新たなorders テーブルだと一時的に思ってください
@@ -172,19 +175,23 @@ where
  ) as orders
 
 # COALESCEを使って穴埋めしてきます
-select COALESCE(orders.peken, cast(orders.product_id as character)), orders.product_id from (
 select 
-    CASE id
-        WHEN 1 THEN '123'
-        WHEN 3 THEN 'peke'
-        ELSE null
-    END as peken
-    , product_id
-from
- orders
-where
- id in(1,2,3)
- ) as orders
+    COALESCE(orders.peken, 
+    cast(orders.product_id as character)), 
+    orders.product_id 
+from (
+    select 
+        CASE id
+            WHEN 1 THEN '123'
+            WHEN 3 THEN 'peke'
+            ELSE null
+        END as peken
+        , product_id
+    from
+    orders
+    where
+    id in(1,2,3)
+) as orders
 
 # 桁合わせ
 # product sumが桁が揃っていなくてわかりずらいので分析の際には桁数などの「揺れ」を統一させることが大事

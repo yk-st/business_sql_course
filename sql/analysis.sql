@@ -29,11 +29,11 @@ FROM ORDERS
 
 # window関数
 select 
-product_id,total,
-row_number() over(
-    partition by product_id
-    order by total
-)
+    product_id,total,
+    row_number() over(
+        partition by product_id
+        order by total
+    )
 from 
 orders
 
@@ -57,12 +57,10 @@ from hoge ;
 
 # lag関数/lead関数
 with hoge as (
-
-select * from (
-    SELECT product_id,total,to_char(created_at, 'YYYY-MM') AS sa_month
-    FROM orders
-)  peke
-
+    select * from (
+        SELECT product_id,total,to_char(created_at, 'YYYY-MM') AS sa_month
+        FROM orders
+    )  peke
 )
 select 
     product_id
@@ -77,12 +75,10 @@ from hoge ;
 
 #＃ 演習：lag関数を使って売上の先回比を出してみましょう
 with hoge as (
-
-select * from (
-    SELECT product_id,total,to_char(created_at, 'YYYY-MM') AS sa_month
-    FROM orders
-)  peke
-
+    select * from (
+        SELECT product_id,total,to_char(created_at, 'YYYY-MM') AS sa_month
+        FROM orders
+    )  peke
 )
 
 select 
@@ -264,13 +260,13 @@ select not exists (
 
 # total はプラス
 select 
-AVG(CASE WHEN total < 0 THEN 1.0 ELSE 0.0 END) AS total
+    AVG(CASE WHEN total < 0 THEN 1.0 ELSE 0.0 END) AS total
 from 
 orders
 
-
+-- 組み合わせることも可能
 select 
-AVG(CASE WHEN id is NOT NULL THEN 1.0 ELSE 0.0 END) AS id,
-AVG(CASE WHEN total < 0 THEN 1.0 ELSE 0.0 END) AS total
+    AVG(CASE WHEN id is NOT NULL THEN 1.0 ELSE 0.0 END) AS id,
+    AVG(CASE WHEN total < 0 THEN 1.0 ELSE 0.0 END) AS total
 from 
 orders
