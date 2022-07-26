@@ -35,6 +35,74 @@ select
   over(partition by product_id  order by sa_month, product_id rows unbounded preceding) as rate
  from base_data
 
+# NPS
+## 顧客の愛着度
+## 今回はratingsが4以上のデータを好意的
+## 3~4のデータを中立
+## 0~3のデータを批判的として計算(ただし、0は除外する)
+with base_data as (
+    select * from (
+        SELECT user_id,name,product_id,total,to_char(o.created_at, 'YYYY-MM') AS sa_month, rating
+        FROM orders as o
+        inner join people as p on user_id = p.id
+        inner join products as pro on product_id = pro.id
+    )  peke
+)
+
+-- rating をつける
+, add_ratings as (
+select 
+    user_id,
+    product_id,
+    CASE 
+        WHEN rating >= 4 then '好意'
+        WHEN rating between 3 and 4 then '中立'
+        ELSE '批判'
+    END as favarite
+from 
+    base_data
+where
+    rating > 0
+)
+
+--　各個数を算出
+, add_cont as (
+select 
+    count(*) as cont,
+    favarite
+    
+from 
+    add_ratings
+group by
+    favarite
+)
+
+--　各個数を算出
+, add_cont2 as (
+select 
+    count(*) as cont,
+    favarite,
+    sum(count(*)) over() as total 
+from 
+    add_ratings
+group by
+    favarite
+)
+
+
+select
+    total,
+    a1.cont,
+    a2.cont,
+    a1.cont/ total as ratio_favarite,
+    a2.cont/ total as ratio_dislike,
+    (a1.cont/ total) - (a2.cont/total) 
+from add_cont a1
+cross join  add_cont2 a2
+where 
+a1.favarite = '好意' and a2.favarite='批判'
+
+
 # Zチャート
 # 月次売上/売上累計/移動年計
 # 当該月を2017/11月にしましょう
