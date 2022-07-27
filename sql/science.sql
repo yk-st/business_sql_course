@@ -89,7 +89,6 @@ group by
     favarite
 )
 
-
 select
     total,
     a1.cont,
