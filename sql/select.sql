@@ -1,5 +1,3 @@
-show tables;
-
 # Select文を打ってみよう
 ##　テーブルの検索
 ## limitをつけると取得する件数を制限できる
@@ -14,7 +12,11 @@ select id,tax from orders limit 10
 select (tax + tax) tax2 from orders limit 10
 
 # 演習
-Product_id、quantitiy、taxを使ってtotalカラムと数値が一致することを確認してみよう
+sub_total,taxを使って掛け算してみよう
+select 
+    subtotal * (1+ (tax/100)) multiple
+from
+ orders
 
 # 条件付き
 select * from orders where id=74
@@ -74,8 +76,16 @@ where
  id in(1,2,3)
 
 # 演習
-product_idが100以上だったら、Product_id、quantitiy、taxを利用してtotalを計算し、
+product_idが100以上だったら、sub_total、taxの掛け算を計算し、
 そうでなければ、100を固定で入れるようにしてみよう
+select 
+    CASE 
+        WHEN product_id > 100 THEN subtotal * tax
+        ELSE 100.0
+    END as cal
+    , product_id
+from
+ orders
 
 # 複数テーブルを操作する join
 # inner joinとleft join
@@ -227,3 +237,11 @@ with hoge as (
 select * from hoge
 
 # 演習：２つのカラムを持つ擬似テーブルを作成してみよう
+
+with henkan as (
+    select 1 as seq, 5 as seq2
+    union all select 2 as seq, 5 as seq2
+    union all select 3 as seq, 5 as seq2
+)
+
+select * from henkan

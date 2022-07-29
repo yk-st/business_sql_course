@@ -72,7 +72,6 @@ select
     ) as lagss
 from hoge ;
 
-
 #＃ 演習：lag関数を使って売上の先回比を出してみましょう
 with hoge as (
     select * from (
@@ -237,7 +236,40 @@ UNION
 # 積集合
 INTERSECT
 
-# 演習： peopleテーブルとordersテーブルを使ってsourceがtwitterの人とFacebookの人がどちらも購入している商品のproduct_idを出力しよう
+# 演習： peopleテーブルとordersテーブルを使ってsourceがTwitterの人とFacebookの人がどちらも購入している商品のproduct_idを出力しよう
+
+with facebook as (
+    select 
+        product_id 
+    from 
+        orders o
+    inner join people p on p.id = user_id
+    where
+        source in ('Facebook')
+)
+,
+twitter as (
+    select 
+        product_id 
+    from 
+        orders o
+    inner join people p on p.id = user_id
+    where
+        source in ('Twitter')
+)
+
+select
+ * 
+from 
+twitter
+
+-- 積集合
+intersect
+
+select
+ * 
+from 
+facebook
 
 # データの妥当性にも気を付けてみよう
 # データエンジニアとも協力を考えてみよう。いわゆる「データ品質」
