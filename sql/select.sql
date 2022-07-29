@@ -3,37 +3,37 @@ show tables;
 # Select文を打ってみよう
 ##　テーブルの検索
 ## limitをつけると取得する件数を制限できる
-select * from orders limit 10;
+select * from orders limit 10
 
 ## 取得するカラムを設定できる
-select id,tax from orders limit 10;
+select id,tax from orders limit 10
 
 # 四則演算
 # as で別名を付ける事ができる
 # テーブルにも付ける事ができる
-select (tax + tax) as 2tax from orders limit 10;
+select (tax + tax) tax2 from orders limit 10
 
 # 演習
 Product_id、quantitiy、taxを使ってtotalカラムと数値が一致することを確認してみよう
 
 # 条件付き
-select * from orders where id = 74
+select * from orders where id=74
 # 値の比較もできます
-select * from orders where created_at > '2018-11-11'
+select * from orders where created_at>'2018-11-11'
 # 複数条件(and 且つ条件)
-select * from orders where id > 70 and tax < 4
+select * from orders where id >70 and tax <4
 # 複数条件(or または条件)
-select * from orders where id > 70 or tax < 4
+select * from orders where id >70 or tax <4
 # Like
 # %はなんでもありという意味
-select Product_id from orders where Product_id like '%36%'
+select Product_id from orders where cast(Product_id as varchar) like '%36%'
 
 # 副問い合わせ
 # テーブルの検索結果を条件にして検索をする事ができる
 
 select * from orders 
-where id in (
-    select id from orders where id % 2 = 0 and id < 10
+where id = (
+    select id from orders where id % 2 =0 and id <10 limit 1
 )
 
 select 
@@ -84,8 +84,8 @@ product_idが100以上だったら、Product_id、quantitiy、taxを利用して
 
 select distinct od.PRODUCT_ID,pd.TITLE
 from 
-ORDERS as od
-inner join PRODUCTS as pd on od.PRODUCT_ID = pd.id 
+ORDERS od
+inner join PRODUCTS pd on od.PRODUCT_ID = pd.id 
 
 ## 演習
 PEOPLEテーブルがあります。ordersテーブルのuser_idとpeopleテーブルのidを結合して
@@ -94,9 +94,9 @@ PEOPLEテーブルがあります。ordersテーブルのuser_idとpeopleテー�
 
 select distinct od.PRODUCT_ID,pd.TITLE,p.name
 from 
-ORDERS as od
-inner join PRODUCTS as pd on od.PRODUCT_ID = pd.id 
-inner join PEOPLE as p on p.id = od.USER_ID
+    ORDERS od
+    inner join PRODUCTS pd on od.PRODUCT_ID = pd.id 
+    inner join PEOPLE p on p.id = od.USER_ID
 order by p.name
 
 # 集計関数(Group By)
@@ -139,7 +139,7 @@ SELECT COALESCE(seq, 99) FROM hoge;
 ### 先ほどのleft joinとくっつけると強力
 
 ## rpadという右から詰める方法もある
-select distinct lpad( cast(USER_ID as varchar) , 8 , '0') from orders
+select distinct lpad(cast(USER_ID as varchar), 8 , '0') from orders
 
 # sign
 # 0超過なら1

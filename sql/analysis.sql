@@ -1,6 +1,6 @@
 # greatest least関数
 select 
-    greatest(od.PRODUCT_ID,od.USER_ID)
+    GREATEST(od.PRODUCT_ID,od.USER_ID)
 from 
 ORDERS as od
     inner join PRODUCTS as pd on od.PRODUCT_ID = pd.id 
@@ -34,7 +34,7 @@ select
         partition by product_id
         order by total
     )
-from 
+from
 orders
 
 # 移動平均
@@ -53,7 +53,7 @@ select
         order by sa_month
         rows between 5 preceding and current row
     ) moving_avg
-from hoge ;
+from hoge
 
 # lag関数/lead関数
 with hoge as (
@@ -106,7 +106,7 @@ select
     sa_month,product_id,sum(total),count(*)
 from hoge 
 group by rollup(sa_month,product_id)
-;
+
 
 # ヒストグラムを書いてみよう
 
@@ -267,6 +267,6 @@ orders
 -- 組み合わせることも可能
 select 
     AVG(CASE WHEN id is NOT NULL THEN 1.0 ELSE 0.0 END) AS id,
-    AVG(CASE WHEN total < 0 THEN 1.0 ELSE 0.0 END) AS total
+    AVG(CASE WHEN total <0 THEN 1.0 ELSE 0.0 END) AS total
 from 
 orders

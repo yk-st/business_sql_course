@@ -52,7 +52,6 @@ with base_data as (
 -- rating をつける
 , add_ratings as (
 select 
-    user_id,
     product_id,
     CASE 
         WHEN rating >= 4 then '好意'
@@ -95,7 +94,7 @@ select
     a2.cont,
     a1.cont/ total as ratio_favarite,
     a2.cont/ total as ratio_dislike,
-    (a1.cont/ total) - (a2.cont/total) 
+    (a1.cont/ total) - (a2.cont/total)  as nps
 from add_cont a1
 cross join  add_cont2 a2
 where 
