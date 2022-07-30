@@ -16,7 +16,6 @@ services:
       dockerfile: Dockerfile
     env_file: ./env
     volumes:
-      - ./data/postgres-data:/var/lib/postgresql/data
       - ./posgreinit:/docker-entrypoint-initdb.d
     ports:
       - 5434:5434
