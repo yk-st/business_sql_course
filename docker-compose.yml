@@ -14,9 +14,12 @@ services:
     image: postgres:alpine3.16
     env_file: ./env
     volumes:
-      - ./data/postgres-data:/var/lib/postgresql/data
+      - .postgres-data:/var/lib/postgresql/data
       - ./posgreinit:/docker-entrypoint-initdb.d
     ports:
       - 5434:5434
     command: -p 5434
     container_name: "db"
+volumes:
+  postgres-data:
+    external: true
