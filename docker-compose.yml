@@ -17,5 +17,6 @@ services:
       - ./data/postgres-data:/var/lib/postgresql/data
       - ./posgreinit:/docker-entrypoint-initdb.d
     ports:
-      - 5432:5432
+      - 5434:5434
+    command: -p 5434
     container_name: "db"
