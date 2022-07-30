@@ -45,6 +45,19 @@ with hoge as (
         FROM orders
     )  peke
 )
+,
+base_data as (
+select
+    product_id,
+    sa_month,
+    sum(total) as total
+from hoge
+where 
+    product_id in(1)
+group by product_id,sa_month
+order by sa_month
+)
+
 select 
     product_id
     , sa_month
@@ -53,15 +66,29 @@ select
         order by sa_month
         rows between 5 preceding and current row
     ) moving_avg
-from hoge
+from base_data
 
 # lag関数/lead関数
+# lag(total,2)のようにする事で、2つ前のデータを取得することも可能です
 with hoge as (
     select * from (
         SELECT product_id,total,to_char(created_at, 'YYYY-MM') AS sa_month
         FROM orders
     )  peke
 )
+,
+base_data as (
+select
+    product_id,
+    sa_month,
+    sum(total) as total
+from hoge
+where 
+    product_id in(1)
+group by product_id,sa_month
+order by sa_month
+)
+
 select 
     product_id
     , sa_month
@@ -70,7 +97,7 @@ select
         partition by product_id
         order by sa_month
     ) as lagss
-from hoge ;
+from base_data ;
 
 #＃ 演習：lag関数を使って売上の先回比を出してみましょう
 with hoge as (
@@ -78,6 +105,18 @@ with hoge as (
         SELECT product_id,total,to_char(created_at, 'YYYY-MM') AS sa_month
         FROM orders
     )  peke
+)
+,
+base_data as (
+select
+    product_id,
+    sa_month,
+    sum(total) as total
+from hoge
+where 
+    product_id in(1)
+group by product_id,sa_month
+order by sa_month
 )
 
 select 
@@ -91,7 +130,7 @@ select
         partition by product_id
         order by sa_month
     ) as last_month_ratio
-from hoge ;
+from base_data ;
 
 # roll up/cube/
 
@@ -105,7 +144,6 @@ select
     sa_month,product_id,sum(total),count(*)
 from hoge 
 group by rollup(sa_month,product_id)
-
 
 # ヒストグラムを書いてみよう
 
