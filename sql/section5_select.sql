@@ -53,12 +53,15 @@ WITH orders_with AS (
   WHERE
     od.tax > 4
 )
-    select *
-    from 
+select 
+    *
+from 
     orders_with
 union all 
-    select *
-    from orders_with
+select 
+    *
+from 
+    orders_with
 
 # Case分
 # もしXXXであったら？というように条件分岐をする事ができる
